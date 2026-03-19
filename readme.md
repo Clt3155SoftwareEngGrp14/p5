@@ -1,9 +1,9 @@
-# \<Project Name\> Scrum Team
+# Group 14 Photo App Scrum Team
 ## Product Owner
-\<Team Member Name\>
+TJ Johns
 ## Scrum Master
-\<Team Member Name\>
+Abhu Pradhan
 ## Developers
-- \<Team Member Name\>
-- \<Team Member Name\>
-- \<Team Member Name\>
+- Lalith Uriti
+- Jack Howard
+- Jorrin Gutierrez
