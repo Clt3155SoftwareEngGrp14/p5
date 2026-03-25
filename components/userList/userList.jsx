@@ -27,7 +27,7 @@ class UserList extends React.Component {
         <List component="nav">
           {this.state.users.map((user) => (
             <React.Fragment key={user._id}>
-              <ListItem button component={Link} to={`/users/${user._id}`}>
+              <ListItem button component={Link} to={`/photos/${user._id}`}>
                 <ListItemText primary={`${user.first_name} ${user.last_name}`} />
               </ListItem>
               <Divider />
