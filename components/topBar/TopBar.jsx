@@ -4,6 +4,7 @@ import {
 } from '@mui/material';
 import { withRouter } from 'react-router-dom';
 import './TopBar.css';
+import fetchModel from '../../lib/fetchModelData';
 
 /**
  * Define TopBar, a React component of project #5
@@ -11,9 +12,22 @@ import './TopBar.css';
 class TopBar extends React.Component {
   constructor(props) {
     super(props);
+    this.state = {
+      version: null
+    };
   }
-
-  render() {
+  
+  componentDidMount() {
+    fetchModel('/test/info')
+      .then(response => {
+        this.setState({ version: response.data.__v });
+      })
+      .catch(error => {
+        console.error('Error fetching version info:', error);
+      });
+  }
+  
+    render() {
     const { pathname } = this.props.location;
     let context = "App Context";
 
@@ -40,6 +54,11 @@ class TopBar extends React.Component {
           <Typography variant="h5" color="inherit">
             {context}
           </Typography>
+          {this.state.version !== null && (
+            <Typography variant="h5" color="inherit" style={{ marginLeft: '16px' }}>
+              v{this.state.version}
+            </Typography>
+          )}
         </Toolbar>
       </AppBar>
     );
