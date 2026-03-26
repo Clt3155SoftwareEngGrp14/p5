@@ -1,8 +1,7 @@
-import React from 'react';
-import {
-  Typography
-} from '@mui/material';
-import './userDetail.css';
+import React from "react";
+import { Typography } from "@mui/material";
+import "./userDetail.css";
+import fetchModel from "../../lib/fetchModelData";
 
 /**
  * Define UserDetail, a React component of project #5
@@ -10,14 +9,38 @@ import './userDetail.css';
 class UserDetail extends React.Component {
   constructor(props) {
     super(props);
+    this.state = {
+      user: null,
+    };
+  }
+
+  componentDidMount() {
+    this.fetchUser(this.props.match.params.userId);
+  }
+
+  componentDidUpdate(prevProps) {
+    const prevUserId = prevProps.match.params.userId;
+    const currentUserId = this.props.match.params.userId;
+    if (prevUserId !== currentUserId) {
+      this.fetchUser(currentUserId);
+    }
+  }
+
+  fetchUser(userId) {
+    fetchModel(`/user/${userId}`)
+      .then((response) => {
+        this.setState({ user: response.data });
+      })
+      .catch((error) => {
+        console.error("Error fetching user:", error);
+      });
   }
 
   render() {
-    const userId = this.props.match.params.userId;
-    const user = window.models.userModel(userId);
+    const { user } = this.state;
 
     if (!user) {
-      return <Typography variant="body1">User not found.</Typography>;
+      return <Typography variant="body1">Loading...</Typography>;
     }
 
     return (
