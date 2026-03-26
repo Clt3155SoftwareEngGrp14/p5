@@ -1,10 +1,8 @@
-import React from 'react';
-import {
-  AppBar, Toolbar, Typography
-} from '@mui/material';
-import { withRouter } from 'react-router-dom';
-import './TopBar.css';
-import fetchModel from '../../lib/fetchModelData';
+import React from "react";
+import { AppBar, Toolbar, Typography } from "@mui/material";
+import { withRouter } from "react-router-dom";
+import "./TopBar.css";
+import fetchModel from "../../lib/fetchModelData";
 
 /**
  * Define TopBar, a React component of project #5
@@ -13,49 +11,73 @@ class TopBar extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      version: null
+      version: null,
+      contextName: "App Context",
     };
   }
-  
+
   componentDidMount() {
-    fetchModel('/test/info')
-      .then(response => {
+    fetchModel("/test/info")
+      .then((response) => {
         this.setState({ version: response.data.__v });
       })
-      .catch(error => {
-        console.error('Error fetching version info:', error);
+      .catch((error) => {
+        console.error("Error fetching version info:", error);
       });
+
+    this.updateContext();
   }
-  
-    render() {
+
+  componentDidUpdate(prevProps) {
+    if (prevProps.location.pathname !== this.props.location.pathname) {
+      this.updateContext();
+    }
+  }
+
+  updateContext() {
     const { pathname } = this.props.location;
-    let context = "App Context";
 
     if (pathname.startsWith("/users/")) {
       const userId = pathname.split("/")[2];
-      const user = window.models.userModel(userId);
-      if (user) {
-        context = `${user.first_name} ${user.last_name}`;
-      }
+      fetchModel(`/user/${userId}`)
+        .then((response) => {
+          const user = response.data;
+          this.setState({
+            contextName: `${user.first_name} ${user.last_name}`,
+          });
+        })
+        .catch((err) => console.error("Error fetching user context:", err));
     } else if (pathname.startsWith("/photos/")) {
       const userId = pathname.split("/")[2];
-      const user = window.models.userModel(userId);
-      if (user) {
-        context = `Photos of ${user.first_name} ${user.last_name}`;
-      }
+      fetchModel(`/user/${userId}`)
+        .then((response) => {
+          const user = response.data;
+          this.setState({
+            contextName: `Photos of ${user.first_name} ${user.last_name}`,
+          });
+        })
+        .catch((err) => console.error("Error fetching user context:", err));
+    } else {
+      this.setState({ contextName: "App Context" });
     }
+  }
 
+  render() {
     return (
       <AppBar className="topbar-appBar" position="absolute">
         <Toolbar>
           <Typography variant="h5" color="inherit" style={{ flexGrow: 1 }}>
-            TXJoh's Photo App
+            TXJoh&apos;s Photo App
           </Typography>
           <Typography variant="h5" color="inherit">
-            {context}
+            {this.state.contextName}
           </Typography>
           {this.state.version !== null && (
-            <Typography variant="h5" color="inherit" style={{ marginLeft: '16px' }}>
+            <Typography
+              variant="h5"
+              color="inherit"
+              style={{ marginLeft: "16px" }}
+            >
               v{this.state.version}
             </Typography>
           )}
