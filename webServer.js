@@ -46,7 +46,7 @@ const SchemaInfo = require("./schema/schemaInfo.js");
 
 // XXX - Your submission should work without this line. Comment out or delete
 // this line for tests and before submission!
-const models = require("./modelData/photoApp.js").models;
+// const models = require("./modelData/photoApp.js").models;
 mongoose.set("strictQuery", false);
 mongoose.connect("mongodb://127.0.0.1/project6", {
   useNewUrlParser: true,
@@ -143,7 +143,14 @@ app.get("/test/:p1", function (request, response) {
  * URL /user/list - Returns all the User objects.
  */
 app.get("/user/list", function (request, response) {
-  response.status(200).send(models.userListModel());
+  User.find({}, "_id first_name last_name", function (err, users) {
+    if (err) {
+      console.error("Error in /user/list:", err);
+      response.status(500).send(JSON.stringify(err));
+      return;
+    }
+    response.status(200).send(users);
+  });
 });
 
 /**
@@ -151,13 +158,19 @@ app.get("/user/list", function (request, response) {
  */
 app.get("/user/:id", function (request, response) {
   const id = request.params.id;
-  const user = models.userModel(id);
-  if (user === null) {
-    console.log("User with _id:" + id + " not found.");
-    response.status(400).send("Not found");
-    return;
-  }
-  response.status(200).send(user);
+  User.findById(id, "_id first_name last_name location description occupation", function (err, user) {
+    if (err) {
+      console.error("Error in /user/:id:", err);
+      response.status(400).send(JSON.stringify(err));
+      return;
+    }
+    if (user === null) {
+      console.log("User with _id:" + id + " not found.");
+      response.status(400).send("Not found");
+      return;
+    }
+    response.status(200).send(user);
+  });
 });
 
 /**
