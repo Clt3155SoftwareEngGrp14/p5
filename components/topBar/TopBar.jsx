@@ -2,7 +2,7 @@ import React from "react";
 import { AppBar, Toolbar, Typography } from "@mui/material";
 import { withRouter } from "react-router-dom";
 import "./TopBar.css";
-import fetchModel from "../../lib/fetchModelData";
+import axios from "axios";
 
 /**
  * Define TopBar, a React component of project #5
@@ -17,7 +17,7 @@ class TopBar extends React.Component {
   }
 
   componentDidMount() {
-    fetchModel("/test/info")
+    axios.get("/test/info")
       .then((response) => {
         this.setState({ version: response.data.__v });
       })
@@ -39,7 +39,7 @@ class TopBar extends React.Component {
 
     if (pathname.startsWith("/users/")) {
       const userId = pathname.split("/")[2];
-      fetchModel(`/user/${userId}`)
+      axios.get(`/user/${userId}`)
         .then((response) => {
           const user = response.data;
           this.setState({

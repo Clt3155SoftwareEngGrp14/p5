@@ -2,7 +2,7 @@ import React from "react";
 import { Typography } from "@mui/material";
 import { Link } from "react-router-dom";
 import "./userPhotos.css";
-import fetchModel from "../../lib/fetchModelData";
+import axios from "axios";
 
 /**
  * Define UserPhotos, a React componment of project #5
@@ -28,7 +28,7 @@ class UserPhotos extends React.Component {
   }
 
   fetchPhotos(userId) {
-    fetchModel(`/photosOfUser/${userId}`)
+    axios.get(`/photosOfUser/${userId}`)
       .then((response) => {
         this.setState({ photos: response.data });
       })

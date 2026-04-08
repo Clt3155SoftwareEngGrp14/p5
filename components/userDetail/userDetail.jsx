@@ -1,7 +1,7 @@
 import React from "react";
 import { Typography } from "@mui/material";
 import "./userDetail.css";
-import fetchModel from "../../lib/fetchModelData";
+import axios from "axios";
 
 /**
  * Define UserDetail, a React component of project #5
@@ -27,7 +27,7 @@ class UserDetail extends React.Component {
   }
 
   fetchUser(userId) {
-    fetchModel(`/user/${userId}`)
+    axios.get(`/user/${userId}`)
       .then((response) => {
         this.setState({ user: response.data });
       })
