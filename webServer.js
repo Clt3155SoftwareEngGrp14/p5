@@ -175,6 +175,9 @@ app.get("/user/:id", function (request, response) {
 
 /**
  * URL /photosOfUser/:id - Returns the Photos for User (id).
+ * Uses async to load from Photos and Users; comments include nested author
+ * (_id, first_name, last_name). Plain objects are produced via
+ * JSON.parse(JSON.stringify()) before mutating nested comment data.
  */
 app.get("/photosOfUser/:id", function (request, response) {
   const id = request.params.id;
@@ -184,36 +187,65 @@ app.get("/photosOfUser/:id", function (request, response) {
     return;
   }
 
-  Photo.find({ user_id: id })
-    .lean()
-    .exec(function (err, photos) {
-      if (err) {
-        console.error("Error in /photosOfUser/:id:", err);
-        response.status(400).send(JSON.stringify(err));
-        return;
-      }
-      if (photos.length === 0) {
-        console.log("Photos for user with _id:" + id + " not found.");
-        response.status(400).send("Not found");
-        return;
-      }
+  async.waterfall(
+    [
+      function (cb) {
+        User.findById(id).exec(cb);
+      },
+      function (user, cb) {
+        if (user === null) {
+          cb({ status: 400, message: "Not found" });
+          return;
+        }
+        Photo.find({ user_id: id }).exec(cb);
+      },
+      function (photos, cb) {
+        let photosData;
+        try {
+          photosData = JSON.parse(JSON.stringify(photos));
+        } catch (cloneErr) {
+          cb(cloneErr);
+          return;
+        }
 
-      const commentUserIds = new Set();
-      photos.forEach(function (photo) {
-        (photo.comments || []).forEach(function (c) {
-          if (c.user_id) {
-            commentUserIds.add(String(c.user_id));
-          }
+        const commentUserIds = new Set();
+        photosData.forEach(function (photo) {
+          (photo.comments || []).forEach(function (c) {
+            if (c.user_id) {
+              commentUserIds.add(String(c.user_id));
+            }
+          });
         });
-      });
 
-      const lookupIds = Array.from(commentUserIds).map(function (sid) {
-        return new mongoose.Types.ObjectId(sid);
-      });
+        const lookupIds = Array.from(commentUserIds).map(function (sid) {
+          return new mongoose.Types.ObjectId(sid);
+        });
 
-      function sendPhotosWithCommentUsers(users) {
+        if (lookupIds.length === 0) {
+          cb(null, photosData, []);
+          return;
+        }
+
+        User.find({ _id: { $in: lookupIds } }, "_id first_name last_name").exec(
+          function (userErr, users) {
+            if (userErr) {
+              cb(userErr);
+              return;
+            }
+            let usersData;
+            try {
+              usersData = JSON.parse(JSON.stringify(users || []));
+            } catch (cloneErr) {
+              cb(cloneErr);
+              return;
+            }
+            cb(null, photosData, usersData);
+          }
+        );
+      },
+      function (photosData, usersData, cb) {
         const userMap = {};
-        (users || []).forEach(function (u) {
+        usersData.forEach(function (u) {
           userMap[String(u._id)] = {
             _id: u._id,
             first_name: u.first_name,
@@ -221,8 +253,8 @@ app.get("/photosOfUser/:id", function (request, response) {
           };
         });
 
-        photos.forEach(function (photo) {
-          photo.comments = (photo.comments || []).map(function (c) {
+        const payload = photosData.map(function (photo) {
+          const comments = (photo.comments || []).map(function (c) {
             const uid = c.user_id ? String(c.user_id) : null;
             const author = uid ? userMap[uid] : null;
             return {
@@ -236,27 +268,31 @@ app.get("/photosOfUser/:id", function (request, response) {
                   : { _id: null, first_name: "", last_name: "" }),
             };
           });
+          return {
+            _id: photo._id,
+            file_name: photo.file_name,
+            date_time: photo.date_time,
+            user_id: photo.user_id,
+            comments: comments,
+          };
         });
 
-        response.status(200).send(photos);
-      }
-
-      if (lookupIds.length === 0) {
-        sendPhotosWithCommentUsers([]);
+        cb(null, payload);
+      },
+    ],
+    function (err, photosData) {
+      if (err) {
+        if (err.status === 400) {
+          response.status(400).send(err.message);
+          return;
+        }
+        console.error("Error in /photosOfUser/:id:", err);
+        response.status(500).send(JSON.stringify(err));
         return;
       }
-
-      User.find({ _id: { $in: lookupIds } }, "_id first_name last_name")
-        .lean()
-        .exec(function (userErr, users) {
-          if (userErr) {
-            console.error("Error in /photosOfUser/:id (user lookup):", userErr);
-            response.status(500).send(JSON.stringify(userErr));
-            return;
-          }
-          sendPhotosWithCommentUsers(users);
-        });
-    });
+      response.status(200).send(photosData);
+    }
+  );
 });
 
 const server = app.listen(3000, function () {
