@@ -48,15 +48,9 @@ class TopBar extends React.Component {
         })
         .catch((err) => console.error("Error fetching user context:", err));
     } else if (pathname.startsWith("/photos/")) {
-      const userId = pathname.split("/")[2];
-      fetchModel(`/user/${userId}`)
-        .then((response) => {
-          const user = response.data;
-          this.setState({
-            contextName: `Photos of ${user.first_name} ${user.last_name}`,
-          });
-        })
-        .catch((err) => console.error("Error fetching user context:", err));
+        this.setState({
+        contextName: "Photo View",
+      });
     } else {
       this.setState({ contextName: "App Context" });
     }
