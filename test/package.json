@@ -14,7 +14,7 @@
     "mocha": "^11.7.2"
   },
   "scripts": {
-    "test": "mocha serverApiTest.js"
+    "test": "mocha serverApiTest.js sessionInputApiTest.js"
   },
   "author": "Mendel Rosenblum <mendel@cs.stanford.edu> (http://www.stanford.edu/~mendel)",
   "contributors": [
