@@ -362,6 +362,84 @@ app.get("/photosOfUser/:id", function (request, response) {
   );
 });
 
+/**
+ * URL /commentsOfPhoto/:photo_id - Add a comment to a photo.
+ * POST request with JSON body: { comment: "comment text" }
+ * Requires authenticated session.
+ */
+app.post("/commentsOfPhoto/:photo_id", function (request, response) {
+  const photo_id = request.params.photo_id;
+  const commentText = request.body.comment;
+
+  // Validate photo_id
+  if (!mongoose.Types.ObjectId.isValid(photo_id)) {
+    console.log("Invalid photo_id:", photo_id);
+    response.status(400).send("Invalid photo_id");
+    return;
+  }
+
+  // Validate comment is not empty
+  if (!commentText || commentText.trim() === "") {
+    console.log("Empty comment text provided");
+    response.status(400).send("Comment cannot be empty");
+    return;
+  }
+
+  // Get authenticated user
+  const userId = request.session.user._id;
+
+  // Find the photo and add comment
+  Photo.findById(photo_id, function (err, photo) {
+    if (err) {
+      console.error("Error finding photo:", err);
+      response.status(500).send(JSON.stringify(err));
+      return;
+    }
+    if (!photo) {
+      console.log("Photo with _id:" + photo_id + " not found.");
+      response.status(400).send("Photo not found");
+      return;
+    }
+
+    // Create new comment
+    const newComment = {
+      comment: commentText,
+      date_time: new Date(),
+      user_id: userId,
+    };
+
+    // Add comment to photo
+    photo.comments.push(newComment);
+
+    // Save photo with new comment
+    photo.save(function (err) {
+      if (err) {
+        console.error("Error saving comment:", err);
+        response.status(500).send(JSON.stringify(err));
+        return;
+      }
+
+      // Return the new comment with user info
+      User.findById(userId, "_id first_name last_name", function (userErr, user) {
+        if (userErr) {
+          console.error("Error finding user:", userErr);
+          response.status(500).send(JSON.stringify(userErr));
+          return;
+        }
+
+        const responseComment = {
+          _id: newComment._id,
+          comment: newComment.comment,
+          date_time: newComment.date_time,
+          user: user || { _id: userId, first_name: "", last_name: "" },
+        };
+
+        response.status(200).send(responseComment);
+      });
+    });
+  });
+});
+
 const server = app.listen(3000, function () {
   const port = server.address().port;
   console.log(

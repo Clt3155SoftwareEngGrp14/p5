@@ -1,5 +1,5 @@
 import React from "react";
-import { Typography } from "@mui/material";
+import { Typography, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField } from "@mui/material";
 import { Link } from "react-router-dom";
 import "./userPhotos.css";
 import axios from "axios";
@@ -12,6 +12,10 @@ class UserPhotos extends React.Component {
     super(props);
     this.state = {
       photos: null,
+      commentDialogOpen: false,
+      selectedPhotoId: null,
+      commentText: "",
+      submittingComment: false,
     };
   }
 
@@ -37,8 +41,66 @@ class UserPhotos extends React.Component {
       });
   }
 
+  openCommentDialog = (photoId) => {
+    this.setState({
+      commentDialogOpen: true,
+      selectedPhotoId: photoId,
+      commentText: "",
+    });
+  };
+
+  closeCommentDialog = () => {
+    this.setState({
+      commentDialogOpen: false,
+      selectedPhotoId: null,
+      commentText: "",
+    });
+  };
+
+  handleCommentTextChange = (event) => {
+    this.setState({ commentText: event.target.value });
+  };
+
+  submitComment = () => {
+    const { commentText, selectedPhotoId } = this.state;
+    
+    if (!commentText.trim()) {
+      alert("Please enter a comment");
+      return;
+    }
+
+    this.setState({ submittingComment: true });
+
+    axios.post(`/commentsOfPhoto/${selectedPhotoId}`, { comment: commentText })
+      .then((response) => {
+        // Add the new comment to the photo in state
+        const updatedPhotos = this.state.photos.map((photo) => {
+          if (photo._id === selectedPhotoId) {
+            return {
+              ...photo,
+              comments: [...(photo.comments || []), response.data],
+            };
+          }
+          return photo;
+        });
+
+        this.setState({
+          photos: updatedPhotos,
+          commentDialogOpen: false,
+          selectedPhotoId: null,
+          commentText: "",
+          submittingComment: false,
+        });
+      })
+      .catch((error) => {
+        console.error("Error posting comment:", error);
+        this.setState({ submittingComment: false });
+        alert("Error posting comment: " + (error.response?.data || error.message));
+      });
+  };
+
   render() {
-    const { photos } = this.state;
+    const { photos, commentDialogOpen, commentText, submittingComment } = this.state;
 
     if (!photos) {
       return <Typography variant="body1">Loading...</Typography>;
@@ -77,8 +139,44 @@ class UserPhotos extends React.Component {
             ) : (
               <Typography variant="body2">No comments.</Typography>
             )}
+
+            <Button
+              variant="contained"
+              size="small"
+              onClick={() => this.openCommentDialog(photo._id)}
+              style={{ marginTop: "10px" }}
+            >
+              Add Comment
+            </Button>
           </div>
         ))}
+
+        <Dialog open={commentDialogOpen} onClose={this.closeCommentDialog} maxWidth="sm" fullWidth>
+          <DialogTitle>Add Comment</DialogTitle>
+          <DialogContent>
+            <TextField
+              autoFocus
+              margin="dense"
+              label="Comment"
+              fullWidth
+              multiline
+              rows={4}
+              variant="outlined"
+              value={commentText}
+              onChange={this.handleCommentTextChange}
+              placeholder="Enter your comment here..."
+              style={{ marginTop: "10px" }}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={this.closeCommentDialog} disabled={submittingComment}>
+              Cancel
+            </Button>
+            <Button onClick={this.submitComment} variant="contained" disabled={submittingComment}>
+              {submittingComment ? "Posting..." : "Post Comment"}
+            </Button>
+          </DialogActions>
+        </Dialog>
       </div>
     );
   }
