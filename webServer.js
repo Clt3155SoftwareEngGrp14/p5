@@ -39,6 +39,8 @@ const async = require("async");
 const express = require("express");
 const app = express();
 
+const session = require("express-session");
+
 // Load the Mongoose schema for User, Photo, and SchemaInfo
 const User = require("./schema/user.js");
 const Photo = require("./schema/photo.js");
@@ -56,6 +58,9 @@ mongoose.connect("mongodb://127.0.0.1/project6", {
 // We have the express static module
 // (http://expressjs.com/en/starter/static-files.html) do all the work for us.
 app.use(express.static(__dirname));
+
+app.use(session({secret: "secretKey", resave: false, saveUninitialized: false}));
+app.use(express.json());
 
 app.get("/", function (request, response) {
   response.send("Simple web server of files from " + __dirname);
@@ -136,6 +141,68 @@ app.get("/test/:p1", function (request, response) {
     // If we know understand the parameter we return a (Bad Parameter) (400)
     // status.
     response.status(400).send("Bad param " + param);
+  }
+});
+
+/**
+ * URL /admin/login - Sets the session user
+ */
+app.post("/admin/login", function (request, response) {
+  const login_name = request.body.login_name;
+  const password = request.body.password;
+
+  User.findOne({ login_name: login_name }, function(err, user) {
+    if (err) {
+      console.error("Error in /admin/login:", err);
+      response.status(500).send(JSON.stringify(err));
+      return;
+    }
+    if (!user) {
+      console.log("User with login_name:" + login_name + " not found.");
+      response.status(400).send("Login name not found");
+      return;
+    }
+    // Simple password check (assuming passwords are "weak" as defined in loadDatabase.js)
+    if (password && user.password !== password) {
+      console.log("Incorrect password for user:" + login_name);
+      response.status(400).send("Incorrect password");
+      return;
+    }
+    
+    // Set user session
+    request.session.user = {
+      _id: user._id,
+      first_name: user.first_name,
+      last_name: user.last_name,
+      login_name: user.login_name
+    };
+    response.status(200).send(request.session.user);
+  });
+});
+
+/**
+ * URL /admin/logout - Destroys the session
+ */
+app.post("/admin/logout", function (request, response) {
+  if (!request.session.user) {
+    response.status(400).send("No valid session to logout from");
+    return;
+  }
+  request.session.destroy(function (err) {
+    if (err) {
+      response.status(500).send("Could not log out");
+      return;
+    }
+    response.status(200).send("User logged out");
+  });
+});
+
+// Any route subsequent to this will require an authenticated session
+app.use(function (request, response, next) {
+  if (request.session && request.session.user) {
+    next();
+  } else {
+    response.status(401).send("Unauthorized");
   }
 });
 
