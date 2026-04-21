@@ -1,5 +1,5 @@
 import React from "react";
-import { AppBar, Toolbar, Typography } from "@mui/material";
+import { AppBar, Toolbar, Typography, Button } from "@mui/material";
 import { withRouter } from "react-router-dom";
 import "./TopBar.css";
 import axios from "axios";
@@ -56,6 +56,14 @@ class TopBar extends React.Component {
     }
   }
 
+  handleLogout = () => {
+    axios.post("/admin/logout")
+      .then(() => {
+        this.props.onLogout();
+      })
+      .catch((error) => console.error("Error logging out:", error));
+  };
+
   render() {
     return (
       <AppBar className="topbar-appBar" position="absolute">
@@ -63,8 +71,24 @@ class TopBar extends React.Component {
           <Typography variant="h5" color="inherit" style={{ flexGrow: 1 }}>
             TXJoh&apos;s Photo App
           </Typography>
+
+          {this.props.currentUser ? (
+            <div style={{ display: "flex", alignItems: "center", marginRight: "16px" }}>
+              <Typography variant="h6" color="inherit" style={{ marginRight: 16 }}>
+                Hi {this.props.currentUser.first_name}
+              </Typography>
+              <Button color="inherit" onClick={this.handleLogout}>
+                Logout
+              </Button>
+            </div>
+          ) : (
+            <Typography variant="h6" color="inherit" style={{ marginRight: "16px" }}>
+              Please Login
+            </Typography>
+          )}
+
           <Typography variant="h5" color="inherit">
-            {this.state.contextName}
+            {this.props.currentUser ? this.state.contextName : ""}
           </Typography>
           {this.state.version !== null && (
             <Typography
