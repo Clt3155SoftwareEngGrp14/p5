@@ -38,6 +38,10 @@ const async = require("async");
 
 const express = require("express");
 const app = express();
+const fs = require("fs");
+const multer = require("multer");
+
+const processFormBody = multer({storage: multer.memoryStorage()}).single('uploadedphoto');
 
 const session = require("express-session");
 
@@ -237,6 +241,52 @@ app.get("/user/:id", function (request, response) {
       return;
     }
     response.status(200).send(user);
+  });
+});
+
+app.post("/photos/new", function (request, response) {
+  processFormBody(request, response, function (err) {
+    if (err || !request.file) {
+      console.error("Error in photo upload:", err);
+      response.status(400).send("No file included or upload error");
+      return;
+    }
+
+    // Ensure there is a logged-in user
+    if (!request.session || !request.session.user) {
+      response.status(401).send("Unauthorized: Please log in to upload a photo.");
+      return;
+    }
+
+    // Generate a unique filename using a timestamp prefix
+    const timestamp = new Date().valueOf();
+    const filename = "U" + String(timestamp) + request.file.originalname;
+
+    // Write the file to the images directory
+    fs.writeFile("./images/" + filename, request.file.buffer, function (writeErr) {
+      if (writeErr) {
+        console.error("Error writing file:", writeErr);
+        response.status(500).send("Error saving file to server.");
+        return;
+      }
+
+      // Create the new Photo object in the database
+      Photo.create({
+        file_name: filename,
+        date_time: new Date(),
+        user_id: request.session.user._id,
+        comments: []
+      }, function (dbErr, newPhoto) {
+        if (dbErr) {
+          console.error("Error creating Photo record:", dbErr);
+          response.status(500).send(JSON.stringify(dbErr));
+          return;
+        }
+        
+        // Return the newly created photo
+        response.status(200).send(newPhoto);
+      });
+    });
   });
 });
 
