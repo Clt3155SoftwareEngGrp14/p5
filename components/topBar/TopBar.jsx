@@ -62,7 +62,7 @@ class TopBar extends React.Component {
         this.props.onLogout();
       })
       .catch((error) => console.error("Error logging out:", error));
-  };
+  }
 
   handleNewPhoto = (e) => {
     e.preventDefault();
