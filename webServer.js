@@ -323,15 +323,14 @@ app.post("/photos/new", function (request, response) {
         date_time: new Date(),
         user_id: request.session.user._id,
         comments: []
-      }, function (dbErr, newPhoto) {
-        if (dbErr) {
-          console.error("Error creating Photo record:", dbErr);
-          response.status(500).send(JSON.stringify(dbErr));
-          return;
-        }
-        
+      })
+      .then((newPhoto) => {
         // Return the newly created photo
         response.status(200).send(newPhoto);
+      })
+      .catch((dbErr) => {
+        console.error("Error creating Photo record:", dbErr);
+        response.status(500).send(JSON.stringify(dbErr));
       });
     });
   });

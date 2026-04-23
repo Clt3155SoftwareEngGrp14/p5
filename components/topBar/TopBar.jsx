@@ -72,6 +72,9 @@ class TopBar extends React.Component {
       axios.post('/photos/new', domForm)
         .then((res) => {
           console.log("Photo uploaded successfully:", res);
+          if (this.props.onPhotoUpload) {
+            this.props.onPhotoUpload();
+          }
           this.props.history.push(`/photos/${this.props.currentUser._id}`);
         })
         .catch(err => {

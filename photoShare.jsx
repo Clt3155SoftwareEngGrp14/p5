@@ -16,6 +16,7 @@ class PhotoShare extends React.Component {
     super(props);
     this.state = {
       currentUser: null,
+      uploadTrigger: 0,
     };
   }
 
@@ -27,13 +28,17 @@ class PhotoShare extends React.Component {
     this.setState({ currentUser: null });
   };
 
+  handlePhotoUpload = () => {
+    this.setState({ uploadTrigger: this.state.uploadTrigger + 1 });
+  };
+
   render() {
     return (
       <HashRouter>
         <div>
           <Grid container spacing={8}>
             <Grid item xs={12}>
-              <TopBar currentUser={this.state.currentUser} onLogout={this.handleLogoutUser} />
+              <TopBar currentUser={this.state.currentUser} onLogout={this.handleLogoutUser} onPhotoUpload={this.handlePhotoUpload} />
             </Grid>
             <div className="main-topbar-buffer" />
             <Grid item sm={3}>
@@ -62,7 +67,7 @@ class PhotoShare extends React.Component {
                       />
                       <Route
                         path="/photos/:userId"
-                        render={(props) => <UserPhotos {...props} />}
+                        render={(props) => <UserPhotos {...props} uploadTrigger={this.state.uploadTrigger} />}
                       />
                       <Route path="/users" component={UserList} />
                       <Route path="/" render={() => <Typography variant="h4">Welcome to your photos</Typography>} />
