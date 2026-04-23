@@ -1,10 +1,118 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
+.login-register-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 40px;
+  padding: 40px;
+  min-height: calc(100vh - 100px);
+  background: linear-gradient(135deg, #f6f8fd 0%, #f1f5f9 100%);
+  font-family: 'Inter', sans-serif;
+  animation: fadeIn 0.6s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .login-paper {
-  padding: 32px;
-  max-width: 400px;
-  margin: 40px auto;
+  padding: 40px;
+  max-width: 450px;
+  width: 100%;
+  border-radius: 16px !important;
+  background: rgba(255, 255, 255, 0.95) !important;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+  backdrop-filter: blur(10px);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.login-paper:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.12), 0 2px 5px rgba(0, 0, 0, 0.05) !important;
+}
+
+.login-paper h4 {
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 24px;
   text-align: center;
+}
+
+.login-form .MuiTextField-root {
+  margin-top: 12px;
+  margin-bottom: 12px;
+}
+
+.login-form .MuiOutlinedInput-root {
+  border-radius: 8px;
+  transition: all 0.2s ease-in-out;
+}
+
+.login-form .MuiOutlinedInput-root:hover {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.login-form .MuiButton-root {
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  text-transform: none;
+  font-size: 1rem;
+  margin-top: 16px;
+  transition: all 0.3s ease;
+}
+
+.login-form .MuiButton-containedPrimary {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.3);
+}
+
+.login-form .MuiButton-containedPrimary:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+  transform: translateY(-1px);
+}
+
+.login-form .MuiButton-containedSecondary {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  box-shadow: 0 4px 14px rgba(139, 92, 246, 0.3);
+}
+
+.login-form .MuiButton-containedSecondary:hover {
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
+  transform: translateY(-1px);
 }
 
 .error-message {
   margin-top: 16px !important;
+  color: #ef4444 !important;
+  font-weight: 500;
+  text-align: center;
+  background: rgba(239, 68, 68, 0.1);
+  padding: 8px 12px;
+  border-radius: 6px;
+}
+
+.success-message {
+  margin-top: 16px !important;
+  color: #10b981 !important;
+  font-weight: 500;
+  text-align: center;
+  background: rgba(16, 185, 129, 0.1);
+  padding: 8px 12px;
+  border-radius: 6px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 900px) {
+  .login-register-container {
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+  }
 }

@@ -163,7 +163,7 @@ app.post("/admin/login", function (request, response) {
       return;
     }
     // Simple password check (assuming passwords are "weak" as defined in loadDatabase.js)
-    if (password && user.password !== password) {
+    if (user.password !== password) {
       console.log("Incorrect password for user:" + login_name);
       response.status(400).send("Incorrect password");
       return;
@@ -195,6 +195,53 @@ app.post("/admin/logout", function (request, response) {
     }
     response.status(200).send("User logged out");
   });
+});
+
+app.post("/user", function (request, response) {
+  console.log("POST /user invoked with body:", request.body);
+  const { login_name, password, first_name, last_name, location, description, occupation } = request.body;
+
+  if (!login_name || !password || !first_name || !last_name) {
+    console.log("Missing required fields");
+    response.status(400).send("login_name, password, first_name, and last_name must be specified");
+    return;
+  }
+
+  console.log("Checking if user exists:", login_name);
+  User.findOne({ login_name: login_name })
+    .then((existingUser) => {
+      console.log("existingUser found?", !!existingUser);
+      if (existingUser) {
+        response.status(400).send("User with this login_name already exists");
+        return null;
+      }
+
+      console.log("Creating user...");
+      return User.create({
+        login_name,
+        password,
+        first_name,
+        last_name,
+        location,
+        description,
+        occupation
+      });
+    })
+    .then((newUser) => {
+      if (newUser) {
+        console.log("User created:", newUser._id);
+        response.status(200).send({
+          _id: newUser._id,
+          login_name: newUser.login_name,
+          first_name: newUser.first_name,
+          last_name: newUser.last_name
+        });
+      }
+    })
+    .catch((err) => {
+      console.error("Error in /user:", err);
+      response.status(500).send(JSON.stringify(err));
+    });
 });
 
 // Any route subsequent to this will require an authenticated session
