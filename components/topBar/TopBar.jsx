@@ -62,7 +62,30 @@ class TopBar extends React.Component {
         this.props.onLogout();
       })
       .catch((error) => console.error("Error logging out:", error));
+  }
+
+  handleNewPhoto = (e) => {
+    e.preventDefault();
+    if (this.uploadInput && this.uploadInput.files.length > 0) {
+      const domForm = new FormData();
+      domForm.append('uploadedphoto', this.uploadInput.files[0]);
+      axios.post('/photos/new', domForm)
+        .then((res) => {
+          console.log("Photo uploaded successfully:", res);
+          if (this.props.onPhotoUpload) {
+            this.props.onPhotoUpload();
+          }
+          this.props.history.push(`/photos/${this.props.currentUser._id}`);
+        })
+        .catch(err => {
+          console.error(`Error uploading photo: ${err}`);
+          alert("Error uploading photo. Please try again.");
+        });
+    } else {
+      alert("Please choose a file before uploading.");
+    }
   };
+  
 
   render() {
     return (
@@ -74,6 +97,22 @@ class TopBar extends React.Component {
 
           {this.props.currentUser ? (
             <div style={{ display: "flex", alignItems: "center", marginRight: "16px" }}>
+              <input 
+                type="file" 
+                accept="image/*" 
+                ref={(domFileRef) => { this.uploadInput = domFileRef; }} 
+                style={{ marginRight: "10px" }}
+              />
+              
+              <Button 
+              variant="contained" 
+              color="secondary" 
+              onClick={this.handleNewPhoto}
+              style={{ marginRight: "20px" }}
+              >
+                Add Photo
+              </Button>
+              
               <Typography variant="h6" color="inherit" style={{ marginRight: 16 }}>
                 Hi {this.props.currentUser.first_name}
               </Typography>
